@@ -76,6 +76,53 @@ class AccessService {
             return error.message
         }
     }
+
+    static login = async ({email, password}) => {
+        try {
+            const foundShop = await shopModel.findOne({email})
+
+            if (!foundShop){
+                return {
+                    message: "Email not registed"
+                }
+            }
+
+            const matchPassword = await bcrypt.compare(password, foundShop.password)
+
+            if(!matchPassword){
+                return {
+                    message: "Password incorrect!!"
+                }
+            }
+
+            const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
+                modulusLength: 4096,
+                publicKeyEncoding: {
+                    type:'pkcs1',
+                    format: 'pem'
+                },
+                privateKeyEncoding: {
+                    type:'pkcs1',
+                    format: 'pem'
+                }
+            })
+
+            const tokens = await createTokenPair({userId: foundShop._id, email}, publicKey.toString(), privateKey)
+            
+            await KeyTokenService.createKeyToken({
+                userId: foundShop._id,
+                publicKey: publicKey.toString(),
+                refreshToken: tokens.refreshToken
+            })
+
+            return {
+                shop: getInfoData({ fileds: ['_id', 'name', 'email'], object: foundShop }),
+                tokens
+            }
+        } catch (error) {
+            return error.message
+        }
+    }
 }
 
 module.exports = AccessService

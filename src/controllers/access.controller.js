@@ -12,6 +12,16 @@ class AccessController {
             return error.message
         }
     }
+
+    login = async (req, res, next) => {
+        try {
+            return res.status(200).json(
+                await AccessService.login(req.body)
+            )
+        } catch (error) {
+            return error.message
+        }
+    } 
 }
 
 module.exports = new AccessController

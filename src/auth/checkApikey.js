@@ -6,6 +6,7 @@ const HEADERS = {
     API_KEY: 'x-api-key',
     AUTHORIZATION: 'authorization'
 }
+
 const checkApiKey = async (req, res, next) => {
     try {
         const key = req.headers[HEADERS.API_KEY]?.toString()
