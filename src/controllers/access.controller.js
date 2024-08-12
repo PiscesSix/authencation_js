@@ -21,7 +21,31 @@ class AccessController {
         } catch (error) {
             return error.message
         }
-    } 
+    }
+
+    logout = async (req, res, next) => {
+        try {
+            return res.status(200).json(
+                await AccessService.logout(req.keyStore)
+            )
+        } catch (error) {
+            return error.message
+        }
+    }
+
+    handleRefreshToken = async (req, res, next) => {
+        try {
+            return res.status(200).json(
+                await AccessService.handleRefreshToken({
+                    refreshToken: req.refreshToken,
+                    user: req.user,
+                    keyStore: req.keyStore
+                })
+            )
+        } catch (error) {
+            return error.message
+        }
+    }
 }
 
 module.exports = new AccessController

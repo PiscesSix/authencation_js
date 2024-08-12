@@ -107,11 +107,11 @@ class AccessService {
                 }
             })
 
-            const tokens = await createTokenPair({userId: foundShop._id, email}, publicKey.toString(), privateKey)
+            const tokens = await createTokenPair({userId: foundShop._id, email}, publicKey, privateKey)
             
             await KeyTokenService.createKeyToken({
                 userId: foundShop._id,
-                publicKey: publicKey.toString(),
+                publicKey: publicKey,
                 refreshToken: tokens.refreshToken
             })
 
@@ -121,6 +121,68 @@ class AccessService {
             }
         } catch (error) {
             return error.message
+        }
+    }
+
+    static logout = async ({}) => {
+        try {
+            return {
+                message: "logout"
+            }
+        } catch (error) {
+            return error.message
+        }
+        
+    }
+
+    static handleRefreshToken = async ({keyStore, user, refreshToken}) => {
+        try {
+
+            const { userId, email } = user
+
+            if(keyStore.refreshTokensUsed.includes(refreshToken)){
+                return "refresh Token is Used"
+            }
+            
+            if (keyStore.refreshToken !== refreshToken) {
+                return "shop not register"
+            }
+
+            const foundShop = await shopModel.findOne({email})
+
+            const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
+                modulusLength: 4096,
+                publicKeyEncoding: {
+                    type:'pkcs1',
+                    format: 'pem'
+                },
+                privateKeyEncoding: {
+                    type:'pkcs1',
+                    format: 'pem'
+                }
+            })
+
+            const tokens = await createTokenPair({userId: foundShop._id, email}, publicKey, privateKey)
+            
+            await keyStore.updateOne({
+                $set: {
+                    refreshToken: tokens.refreshToken
+                },
+                $addToSet: {
+                    refreshTokensUsed: refreshToken
+                }
+            })
+
+            return {
+                userId,
+                email,
+                tokens
+            }
+
+        } catch (err) {
+            return {
+                message: err.message
+            }
         }
     }
 }

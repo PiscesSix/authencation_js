@@ -9,7 +9,6 @@ const { checkApiKey } = require('../auth/checkApikey')
 router.use(checkApiKey)
 
 // check permission of that key
-
 router.use('/v1/api', require('./access'))
 
 module.exports = router
